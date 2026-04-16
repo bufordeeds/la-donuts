@@ -3,9 +3,9 @@ User-agent: *
 Disallow: /admin/*
 
 # Host
-Host: https://skateland-west.vercel.app
+Host: http://localhost:3001
 
 # Sitemaps
-Sitemap: https://skateland-west.vercel.app/sitemap.xml
-Sitemap: https://skateland-west.vercel.app/pages-sitemap.xml
-Sitemap: https://skateland-west.vercel.app/posts-sitemap.xml
+Sitemap: http://localhost:3001/sitemap.xml
+Sitemap: http://localhost:3001/pages-sitemap.xml
+Sitemap: http://localhost:3001/posts-sitemap.xml
