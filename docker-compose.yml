@@ -10,7 +10,8 @@ services:
       POSTGRES_PASSWORD: ladonuts
       POSTGRES_DB: ladonuts
     ports:
-      - '5432:5432'
+      # Remapped to avoid collision with homebrew postgres on :5432
+      - '5433:5432'
     volumes:
       - ladonuts_pg_data:/var/lib/postgresql/data
 

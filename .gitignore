@@ -33,6 +33,7 @@ pnpm-debug.log*
 # Editor
 .vscode/settings.json
 .idea
+.claude
 
 # Payload generated
 src/payload-types.ts

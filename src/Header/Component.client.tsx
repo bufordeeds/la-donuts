@@ -1,131 +1,133 @@
 'use client'
-import { useHeaderTheme } from '@/providers/HeaderTheme'
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
-import { Phone, MapPin, Clock } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 
-import type { Header } from '@/payload-types'
-
-import { HeaderNav } from './Nav'
 import { Button } from '@/components/ui/button'
-import { SITE_CONFIG } from '@/lib/constants'
-import Image from 'next/image'
+
+const NAV_LINKS = [
+  { label: 'Menu', href: '/menu' },
+  { label: 'Order', href: '/order' },
+  { label: 'Visit', href: '/#visit' },
+] as const
 
 interface HeaderClientProps {
-  data: Header
+  messengerUrl?: string
+  smsPhone?: string
+  orderingEnabled?: boolean
 }
 
-export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
-  const [theme, setTheme] = useState<string | null>(null)
+export const HeaderClient: React.FC<HeaderClientProps> = ({
+  messengerUrl,
+  smsPhone,
+  orderingEnabled,
+}) => {
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [todayHours, setTodayHours] = useState<{ hours: string; isOpen: boolean } | null>(null)
-  const { headerTheme, setHeaderTheme } = useHeaderTheme()
   const pathname = usePathname()
 
+  // Close the mobile drawer whenever the route changes
   useEffect(() => {
-    setHeaderTheme(null)
-  }, [pathname, setHeaderTheme])
+    setMobileOpen(false)
+  }, [pathname])
 
   useEffect(() => {
-    if (headerTheme && headerTheme !== theme) setTheme(headerTheme)
-  }, [headerTheme, theme])
-
-  useEffect(() => {
-    const dayName = new Date()
-      .toLocaleDateString('en-US', { weekday: 'long' })
-      .toLowerCase() as keyof typeof SITE_CONFIG.hours
-    const hours = SITE_CONFIG.hours[dayName]
-    setTodayHours({ hours, isOpen: hours !== 'Private Parties Only' })
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  // When ordering is off, the primary CTA links to Messenger (preferred) or SMS
+  const orderHref = orderingEnabled
+    ? '/order'
+    : messengerUrl || (smsPhone ? `sms:${smsPhone.replace(/\D/g, '')}` : '/order')
+  const orderIsExternal = !orderingEnabled && !!(messengerUrl || smsPhone)
 
   return (
-    <>
-      {/* Top Info Bar */}
-      <div className="hidden lg:block bg-gradient-skate text-white py-1.5 relative overflow-hidden">
-        <div className="absolute inset-0 animate-shimmer opacity-30"></div>
-        <div className="container relative">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-6">
-              <a href={`tel:${SITE_CONFIG.phone.replace(/\D/g, '')}`} className="flex items-center gap-2 hover:text-accent transition-colors">
-                <Phone className="size-3" />
-                {SITE_CONFIG.phone}
+    <header
+      className={`sticky top-0 z-50 w-full transition-colors ${
+        scrolled
+          ? 'bg-background/90 backdrop-blur border-b border-border/60'
+          : 'bg-background/60 backdrop-blur-sm'
+      }`}
+    >
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:h-16 sm:px-6">
+        <Link
+          href="/"
+          className="flex items-center gap-2 font-black tracking-tight"
+          onClick={() => setMobileOpen(false)}
+        >
+          <span
+            aria-hidden
+            className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-base sm:size-9"
+          >
+            🍩
+          </span>
+          <span className="text-lg sm:text-xl">La Donuts</span>
+        </Link>
+
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-6 md:flex">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground"
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Button asChild size="sm" className="rounded-full px-5">
+            {orderIsExternal ? (
+              <a href={orderHref} target="_blank" rel="noopener noreferrer">
+                Order Now
               </a>
-              <a href={SITE_CONFIG.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-accent transition-colors">
-                <MapPin className="size-3" />
-                {SITE_CONFIG.address.street}, {SITE_CONFIG.address.city}
-              </a>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="size-3" />
-              {todayHours ? (
-                todayHours.isOpen ? (
-                  <span className="font-medium">Open Today: {todayHours.hours}</span>
-                ) : (
-                  <span className="font-medium">Private Parties Only Today</span>
-                )
-              ) : (
-                <span className="font-medium">Open Today: Check Schedule</span>
-              )}
-            </div>
-          </div>
-        </div>
+            ) : (
+              <Link href={orderHref}>Order Now</Link>
+            )}
+          </Button>
+        </nav>
+
+        {/* Mobile hamburger */}
+        <button
+          type="button"
+          className="inline-flex size-10 items-center justify-center rounded-full border border-border/60 text-foreground md:hidden"
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen((v) => !v)}
+        >
+          {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        </button>
       </div>
 
-      {/* Main Header */}
-      <header
-        className={`sticky top-0 z-50 w-full transition-all duration-300 bg-slate-900 ${
-          scrolled
-            ? 'shadow-lg shadow-black/20'
-            : ''
-        }`}
-        {...(theme ? { 'data-theme': theme } : {})}
-      >
-        <div className="container">
-          <div className="flex items-center justify-between h-14 lg:h-16">
-            {/* Logo — left aligned */}
-            <Link href="/" className="flex items-center gap-2 group">
-              <Image
-                src="/skateland-logo.png"
-                alt=""
-                width={40}
-                height={34}
-                className="h-9 lg:h-10 w-auto transform group-hover:scale-110 transition-all duration-300"
-              />
-              <span className="font-black text-base lg:text-lg text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
-                {SITE_CONFIG.name}
-              </span>
-            </Link>
-
-            {/* Desktop Nav */}
-            <div className="hidden lg:flex items-center gap-4">
-              <HeaderNav data={data} position="desktop" />
-              <Button
-                size="sm"
-                className="bg-white/15 hover:bg-white/25 text-white font-bold border border-white/20 transition-all duration-300"
-                asChild
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
+          <nav className="mx-auto flex max-w-5xl flex-col gap-1 px-4 py-3">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="rounded-lg px-3 py-3 text-base font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
               >
-                <a href={SITE_CONFIG.bookingUrl} target="_blank" rel="noopener noreferrer">
-                  Book a Party
+                {link.label}
+              </Link>
+            ))}
+            <Button asChild size="lg" className="mt-2 w-full rounded-full">
+              {orderIsExternal ? (
+                <a href={orderHref} target="_blank" rel="noopener noreferrer">
+                  Order Now
                 </a>
-              </Button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="lg:hidden">
-              <HeaderNav data={data} />
-            </div>
-          </div>
+              ) : (
+                <Link href={orderHref}>Order Now</Link>
+              )}
+            </Button>
+          </nav>
         </div>
-      </header>
-    </>
+      )}
+    </header>
   )
 }
