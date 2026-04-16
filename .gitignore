@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Next.js
+.next
+/out
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Production
+/build
+/dist
+
+# Env files (never commit secrets)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Misc
+.DS_Store
+*.pem
+coverage
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor
+.vscode/settings.json
+.idea
+
+# Payload generated
+src/payload-types.ts
+
+# Deploy / CI
+.vercel
+.playwright-mcp
+test-results
+playwright-report

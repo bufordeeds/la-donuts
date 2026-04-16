@@ -1,0 +1,33 @@
+# Local dev services only. Next app runs on host via `pnpm dev`.
+# Provides Postgres 16 + MinIO for Payload.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ladonuts-dev-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ladonuts
+      POSTGRES_PASSWORD: ladonuts
+      POSTGRES_DB: ladonuts
+    ports:
+      - '5432:5432'
+    volumes:
+      - ladonuts_pg_data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio
+    container_name: ladonuts-dev-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ladonuts
+      MINIO_ROOT_PASSWORD: ladonutsminio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - ladonuts_minio_data:/data
+
+volumes:
+  ladonuts_pg_data:
+  ladonuts_minio_data:

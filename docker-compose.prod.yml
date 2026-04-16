@@ -1,0 +1,15 @@
+services:
+  ladonuts:
+    build: .
+    container_name: ladonuts
+    restart: unless-stopped
+    env_file: .env.production
+    networks:
+      - web
+      - internal
+
+networks:
+  web:
+    external: true
+  internal:
+    external: true

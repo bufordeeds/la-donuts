@@ -1,0 +1,11 @@
+# *
+User-agent: *
+Disallow: /admin/*
+
+# Host
+Host: https://skateland-west.vercel.app
+
+# Sitemaps
+Sitemap: https://skateland-west.vercel.app/sitemap.xml
+Sitemap: https://skateland-west.vercel.app/pages-sitemap.xml
+Sitemap: https://skateland-west.vercel.app/posts-sitemap.xml
