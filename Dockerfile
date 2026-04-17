@@ -43,6 +43,7 @@ ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json pnpm-lock.yaml tsconfig.json next.config.js ./
 COPY src ./src
+COPY scripts ./scripts
 # No CMD — override via `docker run ... pnpm payload migrate`
 
 # Production image, copy all the files and run next
