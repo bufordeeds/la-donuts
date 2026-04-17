@@ -24,8 +24,10 @@ COPY . .
 ENV POSTGRES_URL=postgresql://dummy:dummy@localhost:5432/dummy
 ENV PAYLOAD_SECRET=build-time-placeholder
 # NEXT_PUBLIC_SERVER_URL is baked into the client bundle by Next, so the
-# build-time value wins over any runtime .env. Point this at the prod host.
-ENV NEXT_PUBLIC_SERVER_URL=https://la-donuts.com
+# build-time value wins over any runtime .env. Point this at the live host.
+# Swap to https://la-donuts.com once Cloudflare DNS is pointed at the VPS.
+ARG NEXT_PUBLIC_SERVER_URL=https://ladonuts.buford.dev
+ENV NEXT_PUBLIC_SERVER_URL=$NEXT_PUBLIC_SERVER_URL
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_BUILD_SKIP_DB=true
