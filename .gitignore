@@ -35,8 +35,8 @@ pnpm-debug.log*
 .idea
 .claude
 
-# Payload generated
-src/payload-types.ts
+# Payload types are generated, but we commit them so Docker builds work
+# without a DB connection. Regenerate with: pnpm generate:types
 
 # Deploy / CI
 .vercel
