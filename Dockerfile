@@ -23,7 +23,9 @@ COPY . .
 # This dummy value is overridden at runtime by the real env vars.
 ENV POSTGRES_URL=postgresql://dummy:dummy@localhost:5432/dummy
 ENV PAYLOAD_SECRET=build-time-placeholder
-ENV NEXT_PUBLIC_SERVER_URL=https://skateland.buford.dev
+# NEXT_PUBLIC_SERVER_URL is baked into the client bundle by Next, so the
+# build-time value wins over any runtime .env. Point this at the prod host.
+ENV NEXT_PUBLIC_SERVER_URL=https://la-donuts.com
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_BUILD_SKIP_DB=true
