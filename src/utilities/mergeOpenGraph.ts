@@ -4,14 +4,16 @@ import { getServerSideURL } from './getURL'
 const defaultOpenGraph: Metadata['openGraph'] = {
   type: 'website',
   description:
-    "San Antonio's premier family roller skating destination. Enjoy public skating sessions, birthday parties, private events, and more at Skateland West.",
+    'Warm, fluffy handmade donuts made fresh every morning in Gillette, Wyoming. Classic favorites, filled donuts, and rotating specialty flavors.',
   images: [
     {
-      url: `${getServerSideURL()}/og-image.png`,
+      url: `${getServerSideURL()}/opengraph-image`,
+      width: 1200,
+      height: 630,
     },
   ],
-  siteName: 'Skateland West',
-  title: 'Skateland West | San Antonio Roller Skating Rink',
+  siteName: 'La Donuts',
+  title: 'La Donuts | Fresh handmade donuts in Gillette, WY',
 }
 
 export const mergeOpenGraph = (og?: Metadata['openGraph']): Metadata['openGraph'] => {

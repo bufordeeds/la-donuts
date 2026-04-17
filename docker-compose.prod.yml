@@ -8,6 +8,18 @@ services:
       - web
       - internal
 
+  # One-off migrator image — never runs continuously.
+  # Usage: docker compose -f docker-compose.prod.yml run --rm ladonuts-migrate
+  ladonuts-migrate:
+    build:
+      context: .
+      target: migrator
+    env_file: .env.production
+    networks:
+      - internal
+    profiles: ['tools']
+    command: pnpm payload migrate
+
 networks:
   web:
     external: true
