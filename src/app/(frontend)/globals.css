@@ -54,27 +54,7 @@
     --error: 0 80% 55%;
   }
 
-  [data-theme='dark'] {
-    --background: 20 15% 10%;
-    --foreground: 30 40% 96%;
-    --card: 20 15% 14%;
-    --card-foreground: 30 40% 96%;
-    --popover: 20 15% 14%;
-    --popover-foreground: 30 40% 96%;
-    --primary: 340 82% 62%;
-    --primary-foreground: 20 15% 10%;
-    --secondary: 20 15% 20%;
-    --secondary-foreground: 30 40% 96%;
-    --accent: 38 92% 58%;
-    --accent-foreground: 20 15% 10%;
-    --muted: 20 15% 18%;
-    --muted-foreground: 30 15% 65%;
-    --destructive: 0 70% 45%;
-    --destructive-foreground: 30 40% 96%;
-    --border: 20 15% 22%;
-    --input: 20 15% 22%;
-    --ring: 340 82% 62%;
-  }
+  /* No dark-mode overrides — site is light-only. */
 }
 
 @layer base {
