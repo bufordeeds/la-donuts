@@ -2,7 +2,6 @@ import { Banner } from '@payloadcms/ui/elements/Banner'
 import React from 'react'
 
 import './index.scss'
-import { RefreshHomeButton } from './RefreshHomeButton'
 
 const baseClass = 'before-dashboard'
 
@@ -41,29 +40,26 @@ const BeforeDashboard: React.FC = () => {
         <p style={{ fontSize: '1.1rem', margin: 0, flex: 1 }}>
           This is your admin panel. Update flavors, hours, orders, and site content here.
         </p>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <RefreshHomeButton />
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 20px',
-              background: 'var(--theme-success-500)',
-              color: 'white',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontWeight: 'bold',
-              fontSize: '0.95rem',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            View Website &rarr;
-          </a>
-        </div>
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+            background: 'var(--theme-success-500)',
+            color: 'white',
+            borderRadius: '6px',
+            textDecoration: 'none',
+            fontWeight: 'bold',
+            fontSize: '0.95rem',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          View Website &rarr;
+        </a>
       </div>
 
       <h3>Daily tasks</h3>
