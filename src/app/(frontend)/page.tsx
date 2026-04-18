@@ -124,7 +124,12 @@ function OrderCTAButtons({
           <a href={smsHref}>Text us to order</a>
         </Button>
       )}
-      <Button asChild size={size} variant="ghost" className="rounded-full px-6">
+      <Button
+        asChild
+        size={size}
+        variant="outline"
+        className="rounded-full border-foreground/20 bg-background/80 px-6 backdrop-blur"
+      >
         <Link href="/menu">See the menu</Link>
       </Button>
     </div>
@@ -217,7 +222,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-5xl px-4 pb-16 pt-10 sm:px-6 sm:pb-24 sm:pt-16 lg:pt-20">
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div>
-              <span className="inline-flex rounded-full bg-background/70 px-3 py-1 text-xs font-semibold tracking-wide text-primary shadow-sm backdrop-blur">
+              <span className="inline-flex rounded-full bg-background px-3 py-1 text-xs font-semibold tracking-wide text-primary shadow-sm">
                 Gillette, Wyoming
               </span>
               <h1 className="mt-4 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
@@ -230,7 +235,7 @@ export default async function HomePage() {
                 <OrderCTAButtons contact={contact} settings={settings} />
               </div>
 
-              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-foreground/70">
+              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-foreground">
                 <span className="inline-flex items-center gap-2">
                   <Clock className="size-4 text-primary" />
                   {openDayRange} · {openHoursText}
