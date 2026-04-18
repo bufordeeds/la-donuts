@@ -29,7 +29,7 @@ export default buildConfig({
     meta: {
       titleSuffix: '— La Donuts',
       description: 'La Donuts admin — manage flavors, hours, and orders.',
-      icons: [{ rel: 'icon', url: '/favicon.ico' }],
+      icons: [{ rel: 'icon', type: 'image/png', url: '/icon' }],
     },
     components: {
       beforeLogin: ['@/components/BeforeLogin'],
