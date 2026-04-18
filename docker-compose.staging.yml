@@ -1,0 +1,29 @@
+name: ladonuts-staging
+
+services:
+  ladonuts-staging:
+    build: .
+    container_name: ladonuts-staging
+    restart: unless-stopped
+    env_file: .env.production
+    networks:
+      - web
+      - internal
+
+  # One-off migrator for staging.
+  # Usage: docker compose -f docker-compose.staging.yml run --rm ladonuts-staging-migrate
+  ladonuts-staging-migrate:
+    build:
+      context: .
+      target: migrator
+    env_file: .env.production
+    networks:
+      - internal
+    profiles: ['tools']
+    command: pnpm payload migrate
+
+networks:
+  web:
+    external: true
+  internal:
+    external: true
