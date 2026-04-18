@@ -2,6 +2,8 @@
 
 import React from 'react'
 
+import { DonutMark } from '@/components/DonutMark'
+
 const Logo: React.FC = () => {
   return (
     <a
@@ -15,25 +17,10 @@ const Logo: React.FC = () => {
         textDecoration: 'none',
         color: 'inherit',
       }}
-      title="Visit Skateland West Website"
+      title="Visit La Donuts website"
     >
-      <img
-        src="/pink-skates-icon.png"
-        alt="Skateland West"
-        style={{
-          width: '40px',
-          height: '40px',
-          objectFit: 'contain',
-        }}
-      />
-      <span
-        style={{
-          fontWeight: 'bold',
-          fontSize: '1.1rem',
-        }}
-      >
-        Skateland West
-      </span>
+      <DonutMark size={40} />
+      <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>La Donuts</span>
     </a>
   )
 }

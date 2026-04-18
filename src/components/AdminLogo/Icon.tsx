@@ -2,6 +2,8 @@
 
 import React from 'react'
 
+import { DonutMark } from '@/components/DonutMark'
+
 const Icon: React.FC = () => {
   return (
     <a
@@ -13,17 +15,9 @@ const Icon: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
       }}
-      title="Visit Skateland West Website"
+      title="Visit La Donuts website"
     >
-      <img
-        src="/pink-skates-icon.png"
-        alt="Skateland West"
-        style={{
-          width: '24px',
-          height: '24px',
-          objectFit: 'contain',
-        }}
-      />
+      <DonutMark size={28} />
     </a>
   )
 }

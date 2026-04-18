@@ -3,6 +3,7 @@ import React from 'react'
 import { Facebook, Instagram, MapPin, Phone } from 'lucide-react'
 
 import { getCachedGlobal } from '@/utilities/getGlobals'
+import { DonutMark } from '@/components/DonutMark'
 
 type Hours = {
   schedule?: Array<{
@@ -81,14 +82,9 @@ export async function Footer() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
           {/* Brand + contact */}
           <div>
-            <div className="flex items-center gap-2">
-              <span
-                aria-hidden
-                className="inline-flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground"
-              >
-                🍩
-              </span>
-              <span className="text-xl font-black tracking-tight">La Donuts</span>
+            <div className="flex items-center gap-2 text-muted">
+              <DonutMark size={40} className="shrink-0" />
+              <span className="text-xl font-black tracking-tight text-foreground">La Donuts</span>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
               Fresh handmade donuts every morning in Gillette, Wyoming.

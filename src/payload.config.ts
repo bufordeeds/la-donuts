@@ -26,6 +26,11 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
+    meta: {
+      titleSuffix: '— La Donuts',
+      description: 'La Donuts admin — manage flavors, hours, and orders.',
+      icons: [{ rel: 'icon', url: '/favicon.ico' }],
+    },
     components: {
       beforeLogin: ['@/components/BeforeLogin'],
       beforeDashboard: ['@/components/BeforeDashboard'],

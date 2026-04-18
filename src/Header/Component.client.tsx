@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react'
 import { Menu, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { DonutMark } from '@/components/DonutMark'
 
 const NAV_LINKS = [
   { label: 'Menu', href: '/menu' },
@@ -57,16 +58,11 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:h-16 sm:px-6">
         <Link
           href="/"
-          className="flex items-center gap-2 font-black tracking-tight"
+          className="flex items-center gap-2 font-black tracking-tight text-background"
           onClick={() => setMobileOpen(false)}
         >
-          <span
-            aria-hidden
-            className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-base sm:size-9"
-          >
-            🍩
-          </span>
-          <span className="text-lg sm:text-xl">La Donuts</span>
+          <DonutMark size={36} className="shrink-0" />
+          <span className="text-lg text-foreground sm:text-xl">La Donuts</span>
         </Link>
 
         {/* Desktop nav */}
