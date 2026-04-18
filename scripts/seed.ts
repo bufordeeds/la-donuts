@@ -64,14 +64,14 @@ async function seed() {
 
   console.log('• Sample flavors')
   const seedFlavors = [
-    { name: 'Glazed', category: 'classic' as const, description: 'Classic yeast donut, warm glaze.', priceCents: 250, sortOrder: 10, isOnRotation: true, isAvailableToday: true },
-    { name: 'Chocolate Iced', category: 'classic' as const, description: 'Glossy chocolate frosting on a fluffy yeast donut.', priceCents: 300, sortOrder: 20, isOnRotation: true, isAvailableToday: true },
-    { name: 'Maple', category: 'classic' as const, description: 'Real maple glaze, lightly sweet.', priceCents: 300, sortOrder: 30, isOnRotation: true, isAvailableToday: true },
-    { name: 'Cinnamon Sugar', category: 'classic' as const, description: 'Rolled in cinnamon sugar while still warm.', priceCents: 275, sortOrder: 40, isOnRotation: true, isAvailableToday: true },
-    { name: 'Boston Cream', category: 'filled' as const, description: 'Vanilla custard filling, chocolate top.', priceCents: 425, sortOrder: 50, isOnRotation: true, isAvailableToday: true },
-    { name: 'Oreo', category: 'specialty' as const, description: 'Cookies-and-cream glaze with crushed Oreo.', priceCents: 450, sortOrder: 60, isOnRotation: true, isAvailableToday: false },
-    { name: 'Fruity Pebbles', category: 'specialty' as const, description: 'Cereal-topped nostalgia donut.', priceCents: 450, sortOrder: 70, isOnRotation: true, isAvailableToday: false },
-    { name: 'Dubai Pistachio', category: 'specialty' as const, description: 'Viral pistachio cream filling with kataifi crunch.', priceCents: 595, sortOrder: 80, isOnRotation: true, isAvailableToday: false },
+    { name: 'Glazed', category: 'classic' as const, description: 'Classic yeast donut, warm glaze.', priceCents: 250, sortOrder: 10, isOnRotation: true, isSoldOut: false },
+    { name: 'Chocolate Iced', category: 'classic' as const, description: 'Glossy chocolate frosting on a fluffy yeast donut.', priceCents: 300, sortOrder: 20, isOnRotation: true, isSoldOut: false },
+    { name: 'Maple', category: 'classic' as const, description: 'Real maple glaze, lightly sweet.', priceCents: 300, sortOrder: 30, isOnRotation: true, isSoldOut: false },
+    { name: 'Cinnamon Sugar', category: 'classic' as const, description: 'Rolled in cinnamon sugar while still warm.', priceCents: 275, sortOrder: 40, isOnRotation: true, isSoldOut: false },
+    { name: 'Boston Cream', category: 'filled' as const, description: 'Vanilla custard filling, chocolate top.', priceCents: 425, sortOrder: 50, isOnRotation: true, isSoldOut: false },
+    { name: 'Oreo', category: 'specialty' as const, description: 'Cookies-and-cream glaze with crushed Oreo.', priceCents: 450, sortOrder: 60, isOnRotation: true, isSoldOut: false },
+    { name: 'Fruity Pebbles', category: 'specialty' as const, description: 'Cereal-topped nostalgia donut.', priceCents: 450, sortOrder: 70, isOnRotation: true, isSoldOut: false },
+    { name: 'Dubai Pistachio', category: 'specialty' as const, description: 'Viral pistachio cream filling with kataifi crunch.', priceCents: 595, sortOrder: 80, isOnRotation: true, isSoldOut: false },
   ]
 
   // Upsert-ish: clear out any prior sample flavors with these names, then insert

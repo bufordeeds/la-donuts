@@ -701,11 +701,11 @@ export interface Flavor {
    */
   squareCatalogId?: string | null;
   /**
-   * Toggle on each morning for flavors you have available for same-day pickup.
+   * Turn this on when you run out of a flavor. It stays on the menu but shows a "Sold out" badge. Turn off the next morning.
    */
-  isAvailableToday?: boolean | null;
+  isSoldOut?: boolean | null;
   /**
-   * Include on the public menu + next-day pre-orders. Uncheck to retire a flavor without deleting it.
+   * Show this flavor on the public menu. Uncheck to retire it entirely (without deleting).
    */
   isOnRotation?: boolean | null;
   /**
@@ -1214,7 +1214,7 @@ export interface FlavorsSelect<T extends boolean = true> {
   image?: T;
   priceCents?: T;
   squareCatalogId?: T;
-  isAvailableToday?: T;
+  isSoldOut?: T;
   isOnRotation?: T;
   sortOrder?: T;
   slug?: T;

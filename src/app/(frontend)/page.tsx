@@ -17,7 +17,7 @@ type FlavorDoc = {
   description?: string | null
   image?: { url?: string | null; alt?: string | null } | null | string | number
   priceCents: number
-  isAvailableToday?: boolean | null
+  isSoldOut?: boolean | null
   isOnRotation?: boolean | null
   sortOrder?: number | null
 }
@@ -145,9 +145,12 @@ function FlavorCard({ flavor }: { flavor: FlavorDoc }) {
     typeof flavor.image === 'object' && flavor.image && 'alt' in flavor.image
       ? flavor.image.alt || flavor.name
       : flavor.name
+  const soldOut = Boolean(flavor.isSoldOut)
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-sm transition-shadow hover:shadow-md">
+    <article
+      className={`group flex flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-sm transition-shadow hover:shadow-md ${soldOut ? 'opacity-75' : ''}`}
+    >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {imageUrl ? (
           <Image
@@ -155,23 +158,28 @@ function FlavorCard({ flavor }: { flavor: FlavorDoc }) {
             alt={imageAlt || flavor.name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className={`object-cover transition-transform duration-500 ${soldOut ? 'grayscale' : 'group-hover:scale-105'}`}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-donut-gradient text-5xl">
             🍩
           </div>
         )}
-        {flavor.isAvailableToday && (
-          <span className="absolute left-3 top-3 rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground shadow">
-            Available today
-          </span>
+        {soldOut && (
+          <>
+            <div className="absolute inset-0 bg-background/30" aria-hidden />
+            <span className="absolute left-3 top-3 rounded-full bg-foreground px-3 py-1 text-xs font-bold uppercase tracking-wide text-background shadow">
+              Sold out
+            </span>
+          </>
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-4">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-base font-bold leading-tight">{flavor.name}</h3>
-          <span className="shrink-0 text-sm font-semibold text-primary">
+          <h3 className={`text-base font-bold leading-tight ${soldOut ? 'text-muted-foreground line-through decoration-2' : ''}`}>
+            {flavor.name}
+          </h3>
+          <span className={`shrink-0 text-sm font-semibold ${soldOut ? 'text-muted-foreground' : 'text-primary'}`}>
             {formatPrice(flavor.priceCents)}
           </span>
         </div>
@@ -186,12 +194,14 @@ function FlavorCard({ flavor }: { flavor: FlavorDoc }) {
 export default async function HomePage() {
   const { flavors, hours, location, contact, settings } = await loadContent()
 
-  const availableToday = flavors.filter((f) => f.isAvailableToday)
+  // Home shows the full menu with sold-out flavors greyed out — no more
+  // "today vs. not today" split. Kira flips isSoldOut when she runs out.
   const byCategory = flavors.reduce<Record<string, FlavorDoc[]>>((acc, f) => {
     if (!acc[f.category]) acc[f.category] = []
     acc[f.category].push(f)
     return acc
   }, {})
+  const soldOutCount = flavors.filter((f) => f.isSoldOut).length
 
   const tagline = settings?.heroTagline || 'Fresh handmade donuts daily'
   const subtitle =
@@ -266,17 +276,19 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* TODAY'S MENU — only shown if she's marked any flavor available today */}
-      {availableToday.length > 0 && (
+      {/* FULL MENU */}
+      {flavors.length > 0 && (
         <section className="mx-auto max-w-5xl px-4 pt-16 sm:px-6 sm:pt-20">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-primary">Today</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-primary">The menu</p>
               <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">
-                Fresh out of the fryer
+                Our handmade donuts
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                What&apos;s available for pickup today. We sell out daily — come early.
+                {soldOutCount > 0
+                  ? `${soldOutCount} flavor${soldOutCount === 1 ? '' : 's'} sold out — come early tomorrow!`
+                  : 'Come early — we sell out daily.'}
               </p>
             </div>
             <Link
@@ -286,21 +298,6 @@ export default async function HomePage() {
               Full menu <ArrowRight className="size-4" />
             </Link>
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {availableToday.map((flavor) => (
-              <FlavorCard key={String(flavor.id)} flavor={flavor} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* MENU BY CATEGORY — fallback when nothing is marked "today" */}
-      {availableToday.length === 0 && flavors.length > 0 && (
-        <section className="mx-auto max-w-5xl px-4 pt-16 sm:px-6 sm:pt-20">
-          <p className="text-xs font-bold uppercase tracking-wider text-primary">The menu</p>
-          <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">
-            Our handmade donuts
-          </h2>
           {Object.entries(byCategory).map(([cat, list]) => (
             <div key={cat} className="mt-8">
               <h3 className="text-lg font-bold text-foreground/80">

@@ -20,7 +20,7 @@ type FlavorDoc = {
   description?: string | null
   image?: { url?: string | null; alt?: string | null } | string | number | null
   priceCents: number
-  isAvailableToday?: boolean | null
+  isSoldOut?: boolean | null
   isOnRotation?: boolean | null
   sortOrder?: number | null
 }
@@ -63,6 +63,7 @@ export default async function MenuPage() {
     if (!byCategory[flavor.category]) byCategory[flavor.category] = []
     byCategory[flavor.category].push(flavor)
   }
+  const soldOutCount = flavors.filter((f) => f.isSoldOut).length
 
   return (
     <main className="flex-1 pb-20">
@@ -75,7 +76,10 @@ export default async function MenuPage() {
         </Link>
         <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">Our donuts</h1>
         <p className="mt-3 max-w-2xl text-muted-foreground">
-          Flavors rotate daily — what&apos;s marked <span className="font-semibold text-foreground">Available today</span> is what you can reserve right now. Everything else rotates in throughout the week.
+          Everything we make when we&apos;re open.{' '}
+          {soldOutCount > 0
+            ? `Today ${soldOutCount} flavor${soldOutCount === 1 ? ' is' : 's are'} sold out — they&apos;ll be back tomorrow.`
+            : 'Come early — we sell out daily.'}
         </p>
 
         {flavors.length === 0 && (
@@ -114,10 +118,11 @@ export default async function MenuPage() {
                     typeof flavor.image === 'object' && flavor.image && 'url' in flavor.image
                       ? flavor.image.url
                       : null
+                  const soldOut = Boolean(flavor.isSoldOut)
                   return (
                     <article
                       key={String(flavor.id)}
-                      className="flex flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-sm"
+                      className={`flex flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-sm ${soldOut ? 'opacity-75' : ''}`}
                     >
                       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                         {imageUrl ? (
@@ -126,23 +131,32 @@ export default async function MenuPage() {
                             alt={flavor.name}
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                            className="object-cover"
+                            className={`object-cover ${soldOut ? 'grayscale' : ''}`}
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-donut-gradient text-5xl">
                             🍩
                           </div>
                         )}
-                        {flavor.isAvailableToday && (
-                          <span className="absolute left-3 top-3 rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground shadow">
-                            Available today
-                          </span>
+                        {soldOut && (
+                          <>
+                            <div className="absolute inset-0 bg-background/30" aria-hidden />
+                            <span className="absolute left-3 top-3 rounded-full bg-foreground px-3 py-1 text-xs font-bold uppercase tracking-wide text-background shadow">
+                              Sold out
+                            </span>
+                          </>
                         )}
                       </div>
                       <div className="flex flex-1 flex-col gap-1 p-4">
                         <div className="flex items-start justify-between gap-3">
-                          <h3 className="text-base font-bold leading-tight">{flavor.name}</h3>
-                          <span className="shrink-0 text-sm font-semibold text-primary">
+                          <h3
+                            className={`text-base font-bold leading-tight ${soldOut ? 'text-muted-foreground line-through decoration-2' : ''}`}
+                          >
+                            {flavor.name}
+                          </h3>
+                          <span
+                            className={`shrink-0 text-sm font-semibold ${soldOut ? 'text-muted-foreground' : 'text-primary'}`}
+                          >
                             {formatPrice(flavor.priceCents)}
                           </span>
                         </div>
