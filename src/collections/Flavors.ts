@@ -14,7 +14,7 @@ export const Flavors: CollectionConfig<'flavors'> = {
   },
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'category', 'priceCents', 'isAvailableToday', 'isOnRotation'],
+    defaultColumns: ['name', 'category', 'priceCents', 'isSoldOut', 'isOnRotation'],
   },
   fields: [
     {
@@ -61,21 +61,24 @@ export const Flavors: CollectionConfig<'flavors'> = {
       },
     },
     {
-      name: 'isAvailableToday',
+      name: 'isSoldOut',
+      label: 'Sold out',
       type: 'checkbox',
       defaultValue: false,
       admin: {
-        description: 'Toggle on each morning for flavors you have available for same-day pickup.',
+        description:
+          'Turn this on when you run out of a flavor. It stays on the menu but shows a "Sold out" badge. Turn off the next morning.',
         position: 'sidebar',
       },
     },
     {
       name: 'isOnRotation',
+      label: 'On the menu',
       type: 'checkbox',
       defaultValue: true,
       admin: {
         description:
-          'Include on the public menu + next-day pre-orders. Uncheck to retire a flavor without deleting it.',
+          'Show this flavor on the public menu. Uncheck to retire it entirely (without deleting).',
         position: 'sidebar',
       },
     },

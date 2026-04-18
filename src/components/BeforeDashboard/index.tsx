@@ -65,8 +65,9 @@ const BeforeDashboard: React.FC = () => {
       <h3>Daily tasks</h3>
       <ul className={`${baseClass}__instructions`}>
         <li>
-          <strong>Flavors:</strong> Each morning, open &quot;Flavors&quot; and toggle{' '}
-          <em>Available Today</em> on for what you&apos;re selling. Uncheck when you sell out.
+          <strong>Sold out?</strong> Open the flavor in &quot;Flavors&quot; and check{' '}
+          <em>Sold out</em>. The flavor stays on the menu with a &quot;Sold out&quot; label —
+          uncheck tomorrow morning to bring it back.
         </li>
         <li>
           <strong>Orders:</strong> Check &quot;Orders&quot; for pre-orders and same-day
