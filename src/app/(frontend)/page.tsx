@@ -220,14 +220,13 @@ export default async function HomePage() {
       {/* HERO */}
       <section className="relative overflow-hidden bg-donut-gradient">
         <div className="mx-auto max-w-5xl px-4 pb-16 pt-10 sm:px-6 sm:pb-24 sm:pt-16 lg:pt-20">
-          <div className="grid items-center gap-10 lg:grid-cols-2">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.05fr,1fr]">
             <div>
               <span className="inline-flex rounded-full bg-background px-3 py-1 text-xs font-semibold tracking-wide text-primary shadow-sm">
                 Gillette, Wyoming
               </span>
               <h1 className="mt-4 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
                 {tagline}
-                <span aria-hidden className="ml-2 inline-block">🍩</span>
               </h1>
               <p className="mt-4 max-w-xl text-base text-foreground/80 sm:text-lg">{subtitle}</p>
 
@@ -250,10 +249,17 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <div className="relative hidden aspect-square w-full max-w-md lg:block">
-              <div className="absolute inset-0 rounded-full bg-donut-gradient-deep opacity-30 blur-3xl" />
-              <div className="animate-float relative flex h-full items-center justify-center text-[14rem] leading-none">
-                🍩
+            <div className="relative mt-2 lg:mt-0">
+              <div className="relative overflow-hidden rounded-3xl shadow-xl ring-1 ring-black/5">
+                <Image
+                  src="/assets/hero-donuts.jpg"
+                  alt="A plate of fresh handmade donuts — glazed, chocolate iced, maple, cinnamon sugar, pink sprinkle, and Boston cream — with a cup of coffee"
+                  width={1800}
+                  height={1350}
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="h-auto w-full object-cover"
+                />
               </div>
             </div>
           </div>
