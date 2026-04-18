@@ -179,9 +179,9 @@ export const HeroSection: React.FC<Props> = ({
               className="bg-pink-500 hover:bg-pink-400 text-white font-bold text-base md:text-lg px-6 md:px-8 py-4 md:py-6 w-full sm:w-auto sm:min-w-[160px] shadow-[0_0_20px_rgba(236,72,153,0.5)] hover:shadow-[0_0_30px_rgba(236,72,153,0.7)] transition-all duration-300"
               asChild
             >
-              <a href="/order">
+              <Link href="/order">
                 ORDER NOW
-              </a>
+              </Link>
             </Button>
 
             <Button
