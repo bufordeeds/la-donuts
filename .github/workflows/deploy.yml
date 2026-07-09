@@ -1,0 +1,205 @@
+name: Deploy
+
+# Primary deploy flow. Triggered by a successful CI run on main.
+# Ported from skateland-west's proven pattern (2026-07-09) with three
+# additions: pre-migration DB snapshot, post-deploy smoke test, and a
+# failure email sent from the VPS (keeps the Resend key off GitHub).
+#
+# Shape:
+#   1. Check out the EXACT SHA CI validated (not HEAD of main).
+#   2. Build + push GHCR tags from that SHA:
+#        - ghcr.io/<repo>:<sha> + :latest   (target=runner)
+#        - ghcr.io/<repo>:<sha>-migrator    (target=migrator)
+#   3. docker login on the VPS with this run's ephemeral GITHUB_TOKEN —
+#      works for private packages, expires with the run, logout in step 8.
+#      (Skateland instead relies on a public package + preemptive logout.)
+#   4. Snapshot the ladonuts DB to ~/backups/pre-deploy/ (keep last 5) —
+#      the restore point if a migration goes bad, since Payload down-
+#      migrations aren't run in prod (policy: roll forward for schema).
+#   5. Run `pnpm payload migrate` as a one-off container. Failure aborts
+#      here — live container stays on the old image, no half-migrated DB.
+#   6. Swap the live container via compose pull + up -d.
+#   7. Smoke test https://la-donuts.com (10 tries, 5s apart, expect 200).
+#   8. Logout GHCR on the VPS (always).
+#   9. On any failure: email hello@buford.dev via the VPS notify script.
+#
+# Rollback: Actions tab -> Rollback -> run with a previously deployed SHA.
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - main
+
+concurrency:
+  # One deploy at a time, queued (not cancelled). Two back-to-back merges
+  # to main cause two sequential deploys — never a half-overwritten one.
+  group: deploy-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write # push to ghcr.io
+
+jobs:
+  deploy:
+    name: Build, push, snapshot, migrate, deploy, verify
+    runs-on: ubuntu-latest
+    # workflow_run also fires on failed CI runs, so this gate is mandatory.
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    timeout-minutes: 25
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}
+      # The SHA that CI validated, not github.sha of this workflow run
+      # (which may already be a newer commit on main).
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+
+    steps:
+      - name: Checkout at CI-validated SHA
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push runner image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: runner
+          push: true
+          build-args: |
+            NEXT_PUBLIC_SERVER_URL=https://la-donuts.com
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}
+            ghcr.io/${{ github.repository }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push migrator image
+        # Runs after the runner build so shared layers are already in the
+        # builder cache; only migrator-specific layers are new work.
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: migrator
+          push: true
+          build-args: |
+            NEXT_PUBLIC_SERVER_URL=https://la-donuts.com
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}-migrator
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Set up SSH for VPS
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Log in to GHCR on the VPS (ephemeral token)
+        # This run's GITHUB_TOKEN can read this repo's packages; it expires
+        # when the run ends and we log out in the always() step below, so
+        # no long-lived registry credential ever lives on the VPS.
+        run: |
+          set -euo pipefail
+          printf '%s' "${{ secrets.GITHUB_TOKEN }}" | \
+            ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+              "$VPS_USER@$VPS_HOST" \
+              "docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin"
+
+      - name: Pre-migration DB snapshot
+        # Restore point from the moment before this deploy's migrations.
+        # Nightly backups can be up to 24h stale; this one is exact.
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "$VPS_USER@$VPS_HOST" \
+            'mkdir -p ~/backups/pre-deploy && \
+             docker exec buford-postgres-1 pg_dump -U buford -Fc ladonuts \
+               > ~/backups/pre-deploy/ladonuts-$(date -u +%Y%m%d-%H%M%S).dump && \
+             ls -t ~/backups/pre-deploy/ladonuts-*.dump | tail -n +6 | xargs -r rm --'
+
+      - name: Run Payload migrations as a one-off container
+        # If migrate exits non-zero this step fails the workflow and the
+        # swap step never runs — live container stays on the old image.
+        env:
+          MIGRATOR_IMAGE: ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}-migrator
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "$VPS_USER@$VPS_HOST" \
+            "docker pull '$MIGRATOR_IMAGE' && \
+             docker run --rm \
+               --env-file ~/projects/ladonuts/.env.production \
+               --network internal \
+               '$MIGRATOR_IMAGE' \
+               pnpm run payload migrate"
+
+      - name: Swap live container (compose pull + up -d)
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "$VPS_USER@$VPS_HOST" \
+            "cd ~/projects/ladonuts && \
+             docker compose -f docker-compose.prod.yml pull ladonuts && \
+             docker compose -f docker-compose.prod.yml up -d ladonuts"
+
+      - name: Smoke test
+        # A green deploy means "site is actually serving", not just
+        # "container swapped". 10 tries, 5s apart.
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 10); do
+            code=$(curl -so /dev/null -m 10 -w '%{http_code}' https://la-donuts.com) || code=000
+            if [ "$code" = "200" ]; then
+              echo "Smoke test passed (HTTP 200 on try $i)"
+              exit 0
+            fi
+            echo "Try $i: HTTP $code — retrying in 5s"
+            sleep 5
+          done
+          echo "Smoke test FAILED after 10 tries"
+          exit 1
+
+      - name: Log out of GHCR on the VPS
+        if: always()
+        run: |
+          ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "$VPS_USER@$VPS_HOST" \
+            "docker logout ghcr.io >/dev/null 2>&1 || true"
+
+      - name: Email failure notice (sent from the VPS)
+        if: failure()
+        run: |
+          ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "$VPS_USER@$VPS_HOST" \
+            "~/scripts/notify-deploy-failure.sh 'la-donuts' \
+              'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'" \
+            || echo "::warning::failure email could not be sent"
+
+      - name: Deploy summary
+        if: always()
+        run: |
+          {
+            echo "### Deploy summary"
+            echo ""
+            echo "- Validated SHA: \`${{ github.event.workflow_run.head_sha }}\`"
+            echo "- Runner image: \`ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}\`"
+            echo "- Migrator image: \`ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}-migrator\`"
+            echo "- Status: \`${{ job.status }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

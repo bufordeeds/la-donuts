@@ -1,0 +1,101 @@
+name: Rollback
+
+# One-tap rollback to a previously deployed image. Run from the Actions
+# tab (or the GitHub mobile app): pick a SHA that deployed successfully
+# before — the "Validated SHA" line in any past Deploy run's summary.
+#
+# APP-LEVEL ONLY: this swaps the running container back to the old image.
+# It does NOT reverse DB migrations. If the bad deploy included a breaking
+# migration, prefer rolling forward (fix + push); the pre-deploy DB
+# snapshot in ~/backups/pre-deploy/ on the VPS is the last resort.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Full commit SHA of a previously deployed image"
+        required: true
+        type: string
+
+concurrency:
+  # Share the deploy queue so a rollback can't interleave with a deploy.
+  group: deploy-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  rollback:
+    name: Roll back to selected SHA
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TARGET_IMAGE: ghcr.io/${{ github.repository }}:${{ inputs.sha }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+
+    steps:
+      - name: Set up SSH for VPS
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Log in to GHCR on the VPS (ephemeral token)
+        run: |
+          set -euo pipefail
+          printf '%s' "${{ secrets.GITHUB_TOKEN }}" | \
+            ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+              "$VPS_USER@$VPS_HOST" \
+              "docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin"
+
+      - name: Pull target image and swap
+        # Tag the old SHA as :latest locally, then `up -d` (NO compose
+        # pull — that would re-fetch the registry's newer :latest and
+        # undo the rollback). Compose recreates because the image ID
+        # behind :latest changed.
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "$VPS_USER@$VPS_HOST" \
+            "docker pull '$TARGET_IMAGE' && \
+             docker tag '$TARGET_IMAGE' ghcr.io/${{ github.repository }}:latest && \
+             cd ~/projects/ladonuts && \
+             docker compose -f docker-compose.prod.yml up -d ladonuts"
+
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 10); do
+            code=$(curl -so /dev/null -m 10 -w '%{http_code}' https://la-donuts.com) || code=000
+            if [ "$code" = "200" ]; then
+              echo "Smoke test passed (HTTP 200 on try $i)"
+              exit 0
+            fi
+            echo "Try $i: HTTP $code — retrying in 5s"
+            sleep 5
+          done
+          echo "Smoke test FAILED after 10 tries"
+          exit 1
+
+      - name: Log out of GHCR on the VPS
+        if: always()
+        run: |
+          ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "$VPS_USER@$VPS_HOST" \
+            "docker logout ghcr.io >/dev/null 2>&1 || true"
+
+      - name: Rollback summary
+        if: always()
+        run: |
+          {
+            echo "### Rollback summary"
+            echo ""
+            echo "- Rolled back to: \`${{ inputs.sha }}\`"
+            echo "- Status: \`${{ job.status }}\`"
+            echo "- Reminder: DB migrations were NOT reversed."
+          } >> "$GITHUB_STEP_SUMMARY"

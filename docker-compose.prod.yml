@@ -1,24 +1,18 @@
+# Production compose for the VPS (~/projects/ladonuts/).
+# Since 2026-07-09 the image is built by GitHub Actions and pulled from
+# GHCR — no more building on the VPS. See .github/workflows/deploy.yml.
+# Migrations run as a one-off container from the deploy workflow, so
+# there is no migrator service here anymore.
+
 services:
   ladonuts:
-    build: .
+    image: ghcr.io/bufordeeds/la-donuts:latest
     container_name: ladonuts
     restart: unless-stopped
     env_file: .env.production
     networks:
       - web
       - internal
-
-  # One-off migrator image — never runs continuously.
-  # Usage: docker compose -f docker-compose.prod.yml run --rm ladonuts-migrate
-  ladonuts-migrate:
-    build:
-      context: .
-      target: migrator
-    env_file: .env.production
-    networks:
-      - internal
-    profiles: ['tools']
-    command: pnpm payload migrate
 
 networks:
   web:

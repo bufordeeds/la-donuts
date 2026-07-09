@@ -4,7 +4,7 @@ Guidance for Claude Code working in this repository.
 
 ## Project Overview
 
-**La Donuts** — website for a donut trailer in Gillette, WY. Payload CMS admin (flavors, orders, hours) + Next.js 15 public site + embedded Square checkout for same-day reservations and next-day pre-orders.
+**La Donuts** — website for a donut trailer in Gillette, WY. Payload CMS admin (flavors, hours, pricing) + Next.js 15 public site. Informational only: ordering redirects to Facebook Messenger / text — the client declined the integrated Square checkout, so the Orders collection and Square flow described below are dormant/unbuilt.
 
 Deployed at `la-donuts.com` on Buford's Hetzner VPS (178.156.177.102), alongside the shared Caddy + Postgres + MinIO stack.
 
@@ -89,15 +89,13 @@ Catalog sync is manual in v1 — she pastes a Square catalog ID into each Flavor
 
 VPS at 178.156.177.102 (Hetzner). Wildcard DNS `*.buford.dev` is live; `la-donuts.com` points to VPS via Cloudflare DNS-only.
 
-Per-deploy (manual for v0):
-```bash
-ssh buford@178.156.177.102
-cd ~/projects/ladonuts
-git pull
-docker compose -f docker-compose.prod.yml up -d --build
-```
+**CI/CD (since 2026-07-09):** push to `main` → CI (lint, typecheck, build) → on success, `deploy.yml` builds the image on GitHub's runners, pushes to GHCR, snapshots the DB, runs Payload migrations as a one-off container, swaps the live container, and smoke-tests https://la-donuts.com. No manual deploys, no building on the VPS.
+
+- Roll back: Actions → Rollback → run with a previously deployed SHA (app-level only; migrations are roll-forward).
+- Deploy failure emails hello@buford.dev via a script on the VPS.
+- Content changes (menu, pricing, hours) go through Payload admin — no deploy involved.
 
 Caddy block reverse-proxies `la-donuts.com` to the `ladonuts` container on port 3000.
 
 ## Deferred / out of v1
-SMS notifications (Twilio), Square catalog auto-sync, inventory-aware same-day counts, loyalty, blog/posts, newsletter signup, CI/CD (manual SSH deploy is fine for v0).
+Square checkout (client declined), SMS notifications (Twilio), inventory-aware same-day counts, loyalty, blog/posts, newsletter signup.
