@@ -37,6 +37,17 @@ jobs:
       VPS_HOST: ${{ secrets.VPS_HOST }}
 
     steps:
+      - name: Join tailnet
+        # The VPS no longer exposes SSH publicly (closed ~2026-08-06 for
+        # Skateland's PCI scan). The runner joins the tailnet as an
+        # ephemeral tag:ci node and reaches the VPS over its Tailscale IP
+        # (VPS_HOST secret). Same pattern as skateland-west.
+        uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
       - name: Set up SSH for VPS
         run: |
           mkdir -p ~/.ssh
