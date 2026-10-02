@@ -40,6 +40,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
+  id-token: write # OIDC token for the keyless Tailscale join
   contents: read
   packages: write # push to ghcr.io
 
@@ -108,10 +109,10 @@ jobs:
         # Skateland's PCI scan). The runner joins the tailnet as an
         # ephemeral tag:ci node and reaches the VPS over its Tailscale IP
         # (VPS_HOST secret). Same pattern as skateland-west.
-        uses: tailscale/github-action@v3
+        uses: tailscale/github-action@v4
         with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          oauth-client-id: ${{ vars.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ vars.TS_AUDIENCE }}
           tags: tag:ci
 
       - name: Set up SSH for VPS
