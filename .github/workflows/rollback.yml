@@ -31,11 +31,6 @@ jobs:
   rollback:
     name: Roll back to selected SHA
     runs-on: ubuntu-latest
-    # Records each run as a GitHub deployment, so the repo sidebar and
-    # commits show what is live in production.
-    environment:
-      name: production
-      url: https://la-donuts.com
     timeout-minutes: 10
     env:
       TARGET_IMAGE: ghcr.io/${{ github.repository }}:${{ inputs.sha }}
@@ -116,3 +111,17 @@ jobs:
             echo "- Status: \`${{ job.status }}\`"
             echo "- Reminder: DB migrations were NOT reversed."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # Separate job on purpose: a job with an `environment` gets an OIDC
+  # subject ending in :environment:production, which the Tailscale trust
+  # credential (:ref:refs/heads/main) rejects. Only this no-op job is tied
+  # to the environment, so it records the deployment after rollback succeeds.
+  record:
+    name: Record production deployment
+    needs: rollback
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://la-donuts.com
+    steps:
+      - run: echo "Live at https://la-donuts.com"

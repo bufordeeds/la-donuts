@@ -48,11 +48,6 @@ jobs:
   deploy:
     name: Build, push, snapshot, migrate, deploy, verify
     runs-on: ubuntu-latest
-    # Records each run as a GitHub deployment, so the repo sidebar and
-    # commits show what is live in production.
-    environment:
-      name: production
-      url: https://la-donuts.com
     # workflow_run also fires on failed CI runs, so this gate is mandatory.
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 25
@@ -220,3 +215,17 @@ jobs:
             echo "- Migrator image: \`ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}-migrator\`"
             echo "- Status: \`${{ job.status }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # Separate job on purpose: a job with an `environment` gets an OIDC
+  # subject ending in :environment:production, which the Tailscale trust
+  # credential (:ref:refs/heads/main) rejects. Only this no-op job is tied
+  # to the environment, so it records the deployment after deploy succeeds.
+  record:
+    name: Record production deployment
+    needs: deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://la-donuts.com
+    steps:
+      - run: echo "Live at https://la-donuts.com"
