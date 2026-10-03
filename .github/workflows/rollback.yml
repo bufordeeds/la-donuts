@@ -31,6 +31,11 @@ jobs:
   rollback:
     name: Roll back to selected SHA
     runs-on: ubuntu-latest
+    # Records each run as a GitHub deployment, so the repo sidebar and
+    # commits show what is live in production.
+    environment:
+      name: production
+      url: https://la-donuts.com
     timeout-minutes: 10
     env:
       TARGET_IMAGE: ghcr.io/${{ github.repository }}:${{ inputs.sha }}
