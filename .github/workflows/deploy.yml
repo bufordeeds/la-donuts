@@ -215,3 +215,17 @@ jobs:
             echo "- Migrator image: \`ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}-migrator\`"
             echo "- Status: \`${{ job.status }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # Separate job on purpose: a job with an `environment` gets an OIDC
+  # subject ending in :environment:production, which the Tailscale trust
+  # credential (:ref:refs/heads/main) rejects. Only this no-op job is tied
+  # to the environment, so it records the deployment after deploy succeeds.
+  record:
+    name: Record production deployment
+    needs: deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://la-donuts.com
+    steps:
+      - run: echo "Live at https://la-donuts.com"
